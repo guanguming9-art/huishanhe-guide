@@ -841,11 +841,11 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
   var btn = document.getElementById('music');
   if (!btn) return;
 
-  var audio = null, on = false, timer = null, VOL = 0.5, armed = false;
+  var audio = null, on = false, timer = null, VOL = 0.85, armed = false;
 
   function ensure() {
     if (audio) return audio;
-    audio = new Audio('dango_96.mp3?v=2');
+    audio = new Audio('dango_piano.mp3');
     audio.loop = true;
     audio.preload = 'auto';
     audio.volume = 0;
