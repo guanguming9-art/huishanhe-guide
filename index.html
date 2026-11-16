@@ -868,26 +868,53 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
   }
 })();
 
-/* ---------------- 背景音乐（团子大家族·钢琴版） -----------------
-   打开页面即尝试播放；被浏览器拦截时，用户第一次操作（点/划/滚/按键）自动续播。 */
+/* ---------------- 背景音乐（团子大家族·钢琴版） ----------------
+   1) 进站立刻起播（流式）；2) 后台整包下载，完成后切到内存播放，彻底避免卡顿断音。 */
 (function () {
   'use strict';
   var btn = document.getElementById('music');
   if (!btn) return;
 
+  var SRC = 'dango_music.mp3';
   var audio = null, on = false, timer = null, VOL = 0.85, START_VOL = 0.62, armed = false;
+  var blobReady = false, preloading = false;
 
   function ensure() {
     if (audio) return audio;
-    audio = new Audio('dango_piano.mp3');
+    audio = new Audio();
     audio.loop = true;
     audio.preload = 'auto';
     audio.volume = 0;
+    audio.src = SRC;
     audio.addEventListener('error', function () {
-      btn.style.opacity = '.35';
-      on = false; btn.classList.remove('on', 'wait');
+      btn.style.opacity = '.35'; on = false; btn.classList.remove('on', 'wait');
     });
+    audio.addEventListener('waiting', function () { if (on) buffering(true); });
+    audio.addEventListener('playing', function () { buffering(false); });
     return audio;
+  }
+
+  /* 整包预取 → 切内存播放 */
+  function prefetch() {
+    if (preloading || blobReady) return;
+    preloading = true;
+    fetch(SRC, { cache: 'force-cache' })
+      .then(function (r) { return r.arrayBuffer(); })
+      .then(function (buf) {
+        if (!buf || buf.byteLength < 200000) return;
+        var url = URL.createObjectURL(new Blob([buf], { type: 'audio/mpeg' }));
+        var t = audio.currentTime || 0, wasPlaying = !audio.paused;
+        var once = function () {
+          audio.removeEventListener('loadedmetadata', once);
+          try { audio.currentTime = t; } catch (e) {}
+          if (wasPlaying || on) audio.play().catch(function () {});
+          blobReady = true;
+        };
+        audio.addEventListener('loadedmetadata', once);
+        audio.src = url;
+        audio.load();
+      })
+      .catch(function () { preloading = false; });
   }
 
   function ramp(to, ms, done) {
@@ -907,14 +934,13 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
       p.then(function () {
         on = true; btn.classList.add('on'); btn.classList.remove('wait');
         btn.setAttribute('aria-pressed', 'true');
-        audio.volume = START_VOL;   /* 立刻可闻 */
-        ramp(VOL, 1500);            /* 1.5 秒抬到目标音量 */
-        toast();
-      }).catch(function () {        /* 被自动播放策略拦住 → 等第一次交互 */
-        arm();
-      });
+        a.volume = START_VOL;                 /* 立刻可闻 */
+        ramp(VOL, 1500);
+        toast(); prefetch();
+      }).catch(function () { arm(); });
     } else {
-      on = true; btn.classList.add('on'); a.volume = START_VOL; ramp(VOL, 1500); toast();
+      on = true; btn.classList.add('on'); a.volume = START_VOL; ramp(VOL, 1500);
+      toast(); prefetch();
     }
   }
 
@@ -926,12 +952,16 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
       document.addEventListener(ev, kick, { once: true, passive: true });
     });
   }
-
   function kick() {
     ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'].forEach(function (ev) {
       document.removeEventListener(ev, kick);
     });
     if (!on) start();
+  }
+
+  function stop() {
+    on = false; btn.classList.remove('on'); btn.setAttribute('aria-pressed', 'false');
+    ramp(0, 2000, function () { if (!on && audio) audio.pause(); });
   }
 
   function toast() {
@@ -948,74 +978,18 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
     el._t = setTimeout(function () { el.classList.remove('show'); }, 5000);
   }
 
-  function stop() {
-    on = false; btn.classList.remove('on'); btn.setAttribute('aria-pressed', 'false');
-    ramp(0, 2500, function () { if (!on && audio) audio.pause(); });  /* 淡出 2.5 秒 */
+  function buffering(yes) {
+    var el = document.getElementById('nowplaying');
+    if (!el) return;
+    if (yes) { el.innerHTML = '<span class="wave">♪</span> 缓冲中…'; el.classList.add('show'); }
   }
 
-  btn.addEventListener('click', function (e) {
-    e.stopPropagation();
-    on ? stop() : start();
-  });
+  btn.addEventListener('click', function (e) { e.stopPropagation(); on ? stop() : start(); });
 
-  /* 打开即播：脚本到位就起播，不等 load */
-  ensure();
-  start();
-  /* 兜底：若首次 play 因缓冲被推迟，canplay 时再确认一次 */
-  setTimeout(function () { if (!on) start(); }, 900);
-
-  /* 调试用：可在控制台查看状态 */
+  ensure(); start();
   window.__bgm = function () {
-    return { on: on, paused: audio ? audio.paused : null, volume: audio ? +audio.volume.toFixed(2) : null, armed: armed };
+    return { on: on, paused: audio ? audio.paused : null, volume: audio ? +audio.volume.toFixed(2) : null, blob: blobReady, armed: armed };
   };
-})();
-
-/* ---------------- 手机端目录抽屉 ---------------- */
-(function () {
-  'use strict';
-  var btn = document.getElementById('tocbtn');
-  if (!btn) return;
-  var mask = null;
-
-  function build() {
-    var src = document.querySelector('aside');
-    mask = document.createElement('div');
-    mask.className = 'tocmask';
-    var panel = document.createElement('nav');
-    panel.className = 'tocpanel';
-    panel.innerHTML = '<button class="close" aria-label="关闭目录">✕</button>' +
-      '<div class="h">' + (src && src.querySelector('.h') ? src.querySelector('.h').textContent : '目录') + '</div>';
-    if (src) {
-      Array.prototype.forEach.call(src.querySelectorAll('a'), function (a) {
-        var c = document.createElement('a');
-        c.href = a.getAttribute('href');
-        c.textContent = a.textContent;
-        if (a.classList.contains('sub')) c.className = 'sub';
-        c.addEventListener('click', close);
-        panel.appendChild(c);
-      });
-    }
-    mask.appendChild(panel);
-    document.body.appendChild(mask);
-    mask.addEventListener('click', function (e) { if (e.target === mask) close(); });
-    panel.querySelector('.close').addEventListener('click', close);
-  }
-
-  function open() {
-    if (!mask) build();
-    mask.classList.add('open');
-    btn.setAttribute('aria-expanded', 'true');
-    document.body.style.overflow = 'hidden';
-  }
-  function close() {
-    if (mask) mask.classList.remove('open');
-    btn.setAttribute('aria-expanded', 'false');
-    document.body.style.overflow = '';
-  }
-
-  btn.setAttribute('aria-expanded', 'false');
-  btn.addEventListener('click', function () { mask && mask.classList.contains('open') ? close() : open(); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
 })();
 
 </script>
