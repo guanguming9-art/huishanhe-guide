@@ -166,6 +166,37 @@ body.ja .hero p{font-size:14px; line-height:1.95}
 .hero h1::after{content:""; display:block; width:74px; height:3px; margin-top:12px; border-radius:3px;
   background:linear-gradient(90deg,var(--pink),rgba(229,154,176,0))}
 
+/* ================= 字体分层（每种角色不同字族） ================= */
+body{--f-title:var(--serif-zh);--f-body:var(--sans-zh);--f-accent:var(--kai-zh);--f-latin:Georgia,"Times New Roman",serif}
+body.ja{--f-title:var(--serif-ja);--f-body:var(--sans-ja);--f-accent:var(--maru-ja);--f-latin:"Times New Roman",Georgia,serif}
+
+/* 正文：拉丁/数字走 Georgia，汉字走无衬线 */
+body,p,li,td,.hero p,.kicker,.search input,input{font-family:var(--f-latin),var(--f-body)}
+
+/* 标题层：宋体/明朝体，宽字距 */
+.hero h1,.sec-head h2,h3.serif,.results .item .t,.mini b,table th,.hero .seal{
+  font-family:var(--f-title); letter-spacing:.06em}
+.hero h1{letter-spacing:.05em}
+
+/* 小标题：黑体，靠字重区分 */
+h3{font-family:var(--f-latin),var(--f-body); font-weight:800; letter-spacing:.02em}
+
+/* 引文/提示/图注/目录：楷体（日文为丸ゴ） */
+h4,.note,.warn,.tip,.poem,figcaption,aside a,aside .h,.badge,.hero .meta span{
+  font-family:var(--f-accent); letter-spacing:.04em}
+aside a{letter-spacing:.02em}
+
+/* 章节序号、数字、页脚：衬线数字 */
+.sec-head .n,footer,.kbd,.hero .meta span{font-family:Georgia,"Times New Roman",serif}
+.sec-head .n{font-style:italic}
+
+/* 使命 / 触发器 / 案例三章：正文改用宋体，长文阅读更沉 */
+.card.alt p,.card.alt li,.card.alt td{font-family:var(--f-title); line-height:2.05; font-size:14.6px}
+.card.alt h3{font-family:var(--f-latin),var(--f-body)}
+
+/* 表格数值列：等宽感 */
+td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
+
 </style>
 </head>
 <body class="ja">
@@ -363,7 +394,7 @@ body.ja .hero p{font-size:14px; line-height:1.95}
 <section id="s6" data-t="国家の使命">
 <div class="sec-head"><span class="n">06</span><h2>国家の使命</h2></div>
 <p class="kicker">プレイヤーに見えるタスクシステム</p>
-<div class="card">
+<div class="card alt">
 <h3 id="s6-a">四つの部分</h3>
 <div class="grid">
   <div class="mini"><b>基本設定</b><span>紐づけ国家・パラメータ・特性</span></div>
@@ -407,7 +438,7 @@ body.ja .hero p{font-size:14px; line-height:1.95}
 <section id="s7" data-t="トリガー">
 <div class="sec-head"><span class="n">07</span><h2>トリガー</h2></div>
 <p class="kicker">見えないエンジン、国家特性の実体</p>
-<div class="card">
+<div class="card alt">
 <p>トリガーはゲーム内に<strong>画面を持たず</strong>、<b>条件成立 → 効果実行</b>だけを行います。公式曰く、多くの国家特性はトリガーで実装されています。</p>
 
 <h3 id="s7-a">五つの項目</h3>
@@ -537,7 +568,7 @@ body.ja .hero p{font-size:14px; line-height:1.95}
 <section id="s9" data-t="実践例">
 <div class="sec-head"><span class="n">09</span><h2>実践例：雪夜、蔡州に入る</h2></div>
 <p class="kicker">この表どおりに埋めれば動く</p>
-<div class="card">
+<div class="card alt">
 <h3>T1 · 困獣（常時特性）</h3>
 <div class="tablewrap"><table>
 <tr><th>項目</th><th>記入</th></tr>
@@ -591,7 +622,7 @@ body.ja .hero p{font-size:14px; line-height:1.95}
   <div class="hr"></div>
   絵山河・クリエイティブ工房 講義 ｜ ゲーム内百科と実機デモより ｜ 2026.11
 </footer>
-<button class="music" id="music" aria-label="背景音乐" title="背景音乐 · 团子大家族（钢琴版）">♪</button>
+<button class="music" id="music" aria-label="背景音乐" title="背景音乐·团子风钢琴">♪</button>
 <button class="totop" id="totop" aria-label="ページ上部へ">↑</button>
 
 <script>
@@ -794,13 +825,14 @@ body.ja .hero p{font-size:14px; line-height:1.95}
   }
 })();
 
-/* ---------------- 背景音乐（团子大家族·钢琴版，淡入淡出） ---------------- */
+/* ---------------- 背景音乐（团子大家族·钢琴版） -----------------
+   打开页面即尝试播放；被浏览器拦截时，用户第一次操作（点/划/滚/按键）自动续播。 */
 (function () {
   'use strict';
   var btn = document.getElementById('music');
   if (!btn) return;
 
-  var audio = null, on = false, timer = null, VOL = 0.55;
+  var audio = null, on = false, timer = null, VOL = 0.5, armed = false;
 
   function ensure() {
     if (audio) return audio;
@@ -810,8 +842,7 @@ body.ja .hero p{font-size:14px; line-height:1.95}
     audio.volume = 0;
     audio.addEventListener('error', function () {
       btn.style.opacity = '.35';
-      btn.title = '音乐加载失败（请刷新重试）';
-      on = false; btn.classList.remove('on');
+      on = false; btn.classList.remove('on', 'wait');
     });
     return audio;
   }
@@ -829,22 +860,53 @@ body.ja .hero p{font-size:14px; line-height:1.95}
   function start() {
     var a = ensure();
     var p = a.play();
-    on = true; btn.classList.add('on'); btn.setAttribute('aria-pressed', 'true');
-    btn.title = '背景音乐 · 团子大家族（钢琴版）';
     if (p && p.then) {
-      p.then(function () { ramp(VOL, 3000); })   // 淡入 3 秒
-       .catch(function () { on = false; btn.classList.remove('on'); btn.setAttribute('aria-pressed', 'false'); });
+      p.then(function () {
+        on = true; btn.classList.add('on'); btn.classList.remove('wait');
+        btn.setAttribute('aria-pressed', 'true');
+        ramp(VOL, 3000);            /* 淡入 3 秒 */
+      }).catch(function () {        /* 被自动播放策略拦住 → 等第一次交互 */
+        arm();
+      });
     } else {
-      ramp(VOL, 3000);
+      on = true; btn.classList.add('on'); ramp(VOL, 3000);
     }
+  }
+
+  function arm() {
+    if (armed) return;
+    armed = true;
+    btn.classList.add('wait');
+    ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'].forEach(function (ev) {
+      document.addEventListener(ev, kick, { once: true, passive: true });
+    });
+  }
+
+  function kick() {
+    ['pointerdown', 'touchstart', 'keydown', 'wheel', 'scroll'].forEach(function (ev) {
+      document.removeEventListener(ev, kick);
+    });
+    if (!on) start();
   }
 
   function stop() {
     on = false; btn.classList.remove('on'); btn.setAttribute('aria-pressed', 'false');
-    ramp(0, 2500, function () { if (!on && audio) audio.pause(); });  // 淡出 2.5 秒
+    ramp(0, 2500, function () { if (!on && audio) audio.pause(); });  /* 淡出 2.5 秒 */
   }
 
-  btn.addEventListener('click', function () { on ? stop() : start(); });
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    on ? stop() : start();
+  });
+
+  /* 打开即播 */
+  if (document.readyState === 'complete') start();
+  else window.addEventListener('load', start);
+
+  /* 调试用：可在控制台查看状态 */
+  window.__bgm = function () {
+    return { on: on, paused: audio ? audio.paused : null, volume: audio ? +audio.volume.toFixed(2) : null, armed: armed };
+  };
 })();
 
 </script>
