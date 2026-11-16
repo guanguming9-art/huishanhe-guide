@@ -139,6 +139,16 @@ body.ja em,body.ja .poem{font-family:var(--maru-ja); letter-spacing:.08em}
   .brand span.full{display:none}
 }
 
+/* ---------- 音乐开关 ---------- */
+.music{position:fixed; left:18px; bottom:24px; z-index:30; width:46px; height:46px; border-radius:50%;
+  border:1px solid var(--line); background:#fff; color:var(--pink-d); font-size:18px; cursor:pointer;
+  box-shadow:var(--shadow); transition:.25s; display:flex; align-items:center; justify-content:center}
+.music:hover{transform:translateY(-2px)}
+.music.on{background:linear-gradient(135deg,var(--pink),var(--pink-d)); color:#fff; border-color:transparent;
+  animation:breath 3.6s ease-in-out infinite}
+@keyframes breath{0%,100%{box-shadow:0 0 0 0 rgba(229,154,176,.45)}50%{box-shadow:0 0 0 12px rgba(229,154,176,0)}}
+@media (max-width:980px){.music{left:14px; bottom:18px; width:44px; height:44px}}
+
 </style>
 </head>
 <body class="ja">
@@ -599,6 +609,7 @@ body.ja em,body.ja .poem{font-family:var(--maru-ja); letter-spacing:.08em}
   <div class="hr"></div>
   絵山河・クリエイティブ工房 講義 ｜ ゲーム内百科と実機デモより ｜ 2026.11
 </footer>
+<button class="music" id="music" aria-label="背景音乐" title="背景音乐·团子风钢琴">♪</button>
 <button class="totop" id="totop" aria-label="ページ上部へ">↑</button>
 
 <script>
@@ -797,6 +808,99 @@ body.ja em,body.ja .poem{font-family:var(--maru-ja); letter-spacing:.08em}
     }, { passive: true });
     top.addEventListener('click', function () { scrollTo({ top: 0, behavior: 'smooth' }); });
   }
+})();
+
+/* ---------------- 背景音乐（Web Audio 程序化钢琴，淡入淡出） ---------------- */
+(function () {
+  'use strict';
+  var btn = document.getElementById('music');
+  if (!btn) return;
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) { btn.style.display = 'none'; return; }
+
+  var ctx = null, master = null, on = false, loopTimer = null, loopStart = 0;
+  var BPM = 76, BEAT = 60 / BPM, BAR = 3 * BEAT, LOOP = 8 * BAR;
+  var VOL = 0.13;
+
+  // 主旋律：8 小节圆舞曲（原创，团子风氛围）
+  var MEL = [
+    [69,0,1],[72,1,1],[77,2,1],   [74,3,1],[72,4,1],[69,5,1],
+    [70,6,1],[74,7,1],[77,8,1],   [72,9,1],[76,10,1],[79,11,1],
+    [77,12,1],[76,13,1],[72,14,1],[74,15,1],[77,16,1],[81,17,1],
+    [79,18,1],[77,19,1],[74,20,1],[72,21,1],[70,22,1],[67,23,1]
+  ];
+  var BASS = [[41,0,2.6],[38,3,2.6],[46,6,2.6],[48,9,2.6],[41,12,2.6],[38,15,2.6],[43,18,2.6],[48,21,2.6]];
+  var ARP  = [
+    [65,1,0.9],[69,2,0.9], [62,4,0.9],[65,5,0.9], [70,7,0.9],[74,8,0.9], [67,10,0.9],[72,11,0.9],
+    [65,13,0.9],[69,14,0.9],[62,16,0.9],[65,17,0.9], [67,19,0.9],[70,20,0.9], [72,22,0.9],[76,23,0.9]
+  ];
+
+  function mkCtx() {
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0;
+    // 简易混响
+    var d = ctx.createDelay(1); d.delayTime.value = 0.19;
+    var fb = ctx.createGain(); fb.gain.value = 0.2;
+    var wet = ctx.createGain(); wet.gain.value = 0.22;
+    master.connect(ctx.destination);
+    master.connect(d); d.connect(fb); fb.connect(d); d.connect(wet); wet.connect(ctx.destination);
+  }
+
+  function voice(midi, t, dur, amp, type) {
+    var f = 440 * Math.pow(2, (midi - 69) / 12);
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(amp, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    g.connect(master);
+    var o = ctx.createOscillator(); o.type = type || 'triangle'; o.frequency.value = f;
+    o.connect(g); o.start(t); o.stop(t + dur + 0.05);
+    var o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 2;
+    var g2 = ctx.createGain(); g2.gain.value = 0.22;
+    o2.connect(g2); g2.connect(g); o2.start(t); o2.stop(t + dur + 0.05);
+  }
+
+  function scheduleLoop(t0) {
+    var i;
+    for (i = 0; i < MEL.length; i++) voice(MEL[i][0], t0 + MEL[i][1] * BEAT, MEL[i][2] * BEAT * 2.2, 0.5);
+    for (i = 0; i < BASS.length; i++) voice(BASS[i][0], t0 + BASS[i][1] * BEAT, BASS[i][2] * BEAT, 0.34, 'sine');
+    for (i = 0; i < ARP.length; i++) voice(ARP[i][0], t0 + ARP[i][1] * BEAT, ARP[i][2] * BEAT * 1.6, 0.16);
+  }
+
+  function loop() {
+    loopStart += LOOP;
+    scheduleLoop(loopStart);
+    loopTimer = setTimeout(loop, LOOP * 1000 - 300);
+  }
+
+  function start() {
+    if (!ctx) mkCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    on = true; btn.classList.add('on'); btn.setAttribute('aria-pressed', 'true');
+    var now = ctx.currentTime;
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(master.gain.value, now);
+    master.gain.linearRampToValueAtTime(VOL, now + 3);   // 淡入 3 秒
+    loopStart = now + 0.15;
+    scheduleLoop(loopStart);
+    loopTimer = setTimeout(loop, LOOP * 1000 - 300);
+    try { localStorage.setItem('bgm', '1'); } catch (e) {}
+  }
+
+  function stop() {
+    on = false; btn.classList.remove('on'); btn.setAttribute('aria-pressed', 'false');
+    clearTimeout(loopTimer);
+    var now = ctx.currentTime;
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(master.gain.value, now);
+    master.gain.linearRampToValueAtTime(0.0001, now + 2.5);  // 淡出 2.5 秒
+    setTimeout(function () { if (!on && ctx) ctx.suspend(); }, 2700);
+    try { localStorage.setItem('bgm', '0'); } catch (e) {}
+  }
+
+  btn.addEventListener('click', function () { on ? stop() : start(); });
+  btn.setAttribute('aria-pressed', 'false');
 })();
 
 </script>
