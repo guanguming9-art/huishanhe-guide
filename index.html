@@ -4,7 +4,131 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>绘山河 · 创意工坊完全入门 | 无悔华夏</title>
-<link rel="stylesheet" href="styles.css">
+<style>
+:root{
+  --ink:#3d2b33; --ink-2:#6b5560; --pink:#e8a0b4; --pink-d:#c9738c;
+  --paper:#fffafb; --card:#ffffff; --line:#f2d5de; --gold:#c9a227;
+  --deep:#8a3f55; --shadow:0 10px 30px rgba(201,115,140,.13);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; color:var(--ink); font-family:"Noto Serif SC","Songti SC","Hiragino Mincho ProN",serif;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #ffe9f0 0%, transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, #fff0f5 0%, transparent 55%),
+    linear-gradient(180deg,#fffafb 0%, #fff3f7 45%, #fffafb 100%);
+  line-height:1.85; -webkit-font-smoothing:antialiased;
+}
+/* ---------- 樱花花瓣 ---------- */
+.sakura{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0}
+.petal{
+  position:absolute; top:-8vh; width:14px; height:14px; opacity:.75;
+  background:radial-gradient(circle at 30% 30%, #ffd9e4, #f7a8bf 65%, #ef8fae);
+  border-radius: 12px 2px 12px 2px;
+  animation: fall linear infinite;
+  filter: drop-shadow(0 2px 3px rgba(200,110,140,.18));
+}
+@keyframes fall{
+  0%{transform:translate3d(0,-10vh,0) rotate(0deg)}
+  50%{transform:translate3d(40px,50vh,0) rotate(220deg)}
+  100%{transform:translate3d(-30px,110vh,0) rotate(420deg)}
+}
+/* ---------- 布局 ---------- */
+.wrap{position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:0 20px 80px}
+header.hero{padding:72px 0 40px; text-align:center; position:relative}
+.hero .seal{
+  display:inline-block; font-size:12px; letter-spacing:.35em; color:var(--pink-d);
+  border:1px solid var(--line); border-radius:999px; padding:6px 16px; background:#fff;
+  box-shadow:var(--shadow)
+}
+.hero h1{
+  font-size:clamp(30px,6vw,52px); margin:22px 0 10px; letter-spacing:.06em; font-weight:700;
+  background:linear-gradient(120deg,#8a3f55,#c9738c 45%,#e8a0b4 75%,#8a3f55);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.hero .sub{color:var(--ink-2); font-size:15px; letter-spacing:.12em}
+.hero .line{margin:26px auto 0; width:120px; height:1px; background:linear-gradient(90deg,transparent,var(--pink),transparent)}
+/* ---------- 目录 ---------- */
+.toc{
+  background:rgba(255,255,255,.86); backdrop-filter:blur(8px); border:1px solid var(--line);
+  border-radius:18px; padding:18px 20px; box-shadow:var(--shadow); margin:8px 0 40px;
+}
+.toc h2{font-size:14px; letter-spacing:.3em; color:var(--pink-d); margin:0 0 12px; font-weight:600}
+.toc ol{margin:0; padding-left:1.2em; columns:2; column-gap:28px}
+.toc li{margin:5px 0; font-size:14.5px}
+.toc a{color:var(--ink); text-decoration:none; border-bottom:1px dotted transparent}
+.toc a:hover{color:var(--pink-d); border-bottom-color:var(--pink)}
+/* ---------- 章节卡片 ---------- */
+section{
+  background:rgba(255,255,255,.92); border:1px solid var(--line); border-radius:22px;
+  padding:34px 32px; margin:26px 0; box-shadow:var(--shadow); position:relative; overflow:hidden;
+}
+section::before{
+  content:""; position:absolute; right:-40px; top:-40px; width:150px; height:150px; border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(247,168,191,.22), transparent 70%);
+}
+h2.sec{
+  font-size:22px; margin:0 0 6px; letter-spacing:.05em; color:var(--deep);
+  display:flex; align-items:center; gap:12px;
+}
+h2.sec .num{
+  font-family:Georgia,serif; font-size:13px; color:#fff; background:linear-gradient(135deg,#e8a0b4,#c9738c);
+  width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+  flex:none; box-shadow:0 4px 10px rgba(201,115,140,.35)
+}
+.kicker{color:var(--ink-2); font-size:13.5px; letter-spacing:.14em; margin:0 0 20px; padding-left:42px}
+h3{font-size:16.5px; margin:26px 0 8px; color:var(--deep); letter-spacing:.04em}
+h3::before{content:"❀"; color:var(--pink); margin-right:8px; font-size:12px}
+p{margin:8px 0; font-size:15px}
+ul,ol{padding-left:1.35em; margin:8px 0}
+li{margin:6px 0; font-size:15px}
+strong{color:var(--deep)}
+small.muted{color:#9b8791}
+code{
+  background:#fff2f6; border:1px solid var(--line); border-radius:6px; padding:1px 6px;
+  font-family:"SFMono-Regular",Consolas,monospace; font-size:13px; color:#a5486a;
+}
+/* ---------- 表格 ---------- */
+.tablewrap{overflow-x:auto; margin:14px 0; border-radius:14px; border:1px solid var(--line)}
+table{border-collapse:collapse; width:100%; font-size:14px; background:#fff}
+th,td{padding:10px 14px; text-align:left; border-bottom:1px solid #fbe9ef; vertical-align:top}
+th{background:linear-gradient(180deg,#fff1f5,#ffe6ee); color:var(--deep); font-weight:600; white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td code{white-space:nowrap}
+/* ---------- 提示块 ---------- */
+.note,.warn,.tip{border-radius:14px; padding:14px 16px 14px 46px; margin:16px 0; position:relative; font-size:14.5px}
+.note{background:#fff7fa; border:1px dashed var(--line); color:#5d4550}
+.warn{background:#fff1f3; border:1px solid #f6c3d0; color:#8a3f55}
+.tip{background:#fdfbf4; border:1px solid #efe3bd; color:#7a6420}
+.note::before,.warn::before,.tip::before{
+  position:absolute; left:16px; top:12px; font-size:16px
+}
+.note::before{content:"❀"}
+.warn::before{content:"⚠"}
+.tip::before{content:"✎"}
+/* ---------- 步骤条 ---------- */
+.steps{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:18px 0}
+.step{
+  background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; position:relative;
+}
+.step b{display:block; color:var(--pink-d); font-size:12px; letter-spacing:.2em; margin-bottom:4px}
+.step span{font-size:14.5px}
+/* ---------- 徽标 ---------- */
+.badges{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 0}
+.badge{font-size:12.5px; color:var(--pink-d); background:#fff; border:1px solid var(--line); border-radius:999px; padding:4px 12px}
+/* ---------- 底部 ---------- */
+footer{margin-top:50px; text-align:center; color:#a88f9a; font-size:13px; letter-spacing:.1em}
+footer .line{width:80px; height:1px; background:var(--pink); margin:18px auto}
+a.link{color:var(--pink-d); text-decoration:none; border-bottom:1px dotted var(--pink)}
+@media (max-width:640px){
+  section{padding:26px 20px; border-radius:18px}
+  .toc ol{columns:1}
+  .kicker{padding-left:0}
+  .hero{padding:48px 0 26px}
+}
+
+</style>
 </head>
 <body>
 <div class="sakura" aria-hidden="true"></div>
