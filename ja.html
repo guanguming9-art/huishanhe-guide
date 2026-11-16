@@ -214,6 +214,29 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
 .lang a.active{background:linear-gradient(135deg,var(--pink),var(--pink-d)); color:#fff}
 .lang a:not(.active):hover{background:var(--pink-xl); color:var(--pink-d)}
 
+/* ---------- 手机端目录抽屉 ---------- */
+.tocbtn{display:none; position:fixed; right:18px; bottom:76px; z-index:31; align-items:center; gap:7px;
+  padding:9px 15px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--pink-d);
+  font-size:13px; font-family:var(--f-accent); letter-spacing:.08em; box-shadow:var(--shadow); cursor:pointer}
+.tocbtn .bars{display:inline-block; width:14px; height:2px; background:currentColor; position:relative}
+.tocbtn .bars::before,.tocbtn .bars::after{content:""; position:absolute; left:0; width:14px; height:2px; background:currentColor}
+.tocbtn .bars::before{top:-5px}.tocbtn .bars::after{top:5px}
+.tocmask{position:fixed; inset:0; z-index:40; background:rgba(72,38,52,.28); backdrop-filter:blur(3px);
+  opacity:0; pointer-events:none; transition:.28s}
+.tocmask.open{opacity:1; pointer-events:auto}
+.tocpanel{position:absolute; left:0; top:0; bottom:0; width:80%; max-width:330px; background:#fff;
+  transform:translateX(-102%); transition:transform .3s cubic-bezier(.4,0,.2,1); overflow-y:auto;
+  padding:26px 8px 40px; box-shadow:8px 0 30px rgba(120,60,80,.18)}
+.tocmask.open .tocpanel{transform:none}
+.tocpanel .h{font-family:var(--f-title); color:var(--pink-d); letter-spacing:.3em; font-size:12px; margin:0 0 14px 18px}
+.tocpanel a{display:block; padding:9px 18px; color:var(--ink2); text-decoration:none; font-size:14.5px;
+  font-family:var(--f-title); border-left:2px solid transparent}
+.tocpanel a.sub{padding-left:34px; font-size:13.5px; color:var(--ink3)}
+.tocpanel a:active,.tocpanel a:hover{background:var(--pink-xl); color:var(--pink-d); border-left-color:var(--pink)}
+.tocpanel .close{position:absolute; right:12px; top:14px; width:32px; height:32px; border-radius:50%;
+  border:1px solid var(--line); background:#fff; color:var(--pink-d); font-size:16px; cursor:pointer}
+@media (max-width:980px){.tocbtn{display:inline-flex}}
+
 </style>
 </head>
 <body class="ja">
@@ -639,6 +662,7 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
   <div class="hr"></div>
   絵山河・クリエイティブ工房 講義 ｜ ゲーム内百科と実機デモより ｜ 2026.11
 </footer>
+<button class="tocbtn" id="tocbtn" aria-label="打开目录"><span class="bars"></span>目录</button>
 <button class="music" id="music" aria-label="背景音乐" title="背景音乐·团子风钢琴">♪</button>
 <button class="totop" id="totop" aria-label="ページ上部へ">↑</button>
 
@@ -942,6 +966,54 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
   window.__bgm = function () {
     return { on: on, paused: audio ? audio.paused : null, volume: audio ? +audio.volume.toFixed(2) : null, armed: armed };
   };
+})();
+
+/* ---------------- 手机端目录抽屉 ---------------- */
+(function () {
+  'use strict';
+  var btn = document.getElementById('tocbtn');
+  if (!btn) return;
+  var mask = null;
+
+  function build() {
+    var src = document.querySelector('aside');
+    mask = document.createElement('div');
+    mask.className = 'tocmask';
+    var panel = document.createElement('nav');
+    panel.className = 'tocpanel';
+    panel.innerHTML = '<button class="close" aria-label="关闭目录">✕</button>' +
+      '<div class="h">' + (src && src.querySelector('.h') ? src.querySelector('.h').textContent : '目录') + '</div>';
+    if (src) {
+      Array.prototype.forEach.call(src.querySelectorAll('a'), function (a) {
+        var c = document.createElement('a');
+        c.href = a.getAttribute('href');
+        c.textContent = a.textContent;
+        if (a.classList.contains('sub')) c.className = 'sub';
+        c.addEventListener('click', close);
+        panel.appendChild(c);
+      });
+    }
+    mask.appendChild(panel);
+    document.body.appendChild(mask);
+    mask.addEventListener('click', function (e) { if (e.target === mask) close(); });
+    panel.querySelector('.close').addEventListener('click', close);
+  }
+
+  function open() {
+    if (!mask) build();
+    mask.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+  function close() {
+    if (mask) mask.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  btn.setAttribute('aria-expanded', 'false');
+  btn.addEventListener('click', function () { mask && mask.classList.contains('open') ? close() : open(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
 })();
 
 </script>
