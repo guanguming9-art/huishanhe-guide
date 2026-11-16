@@ -875,7 +875,7 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
   var btn = document.getElementById('music');
   if (!btn) return;
 
-  var SRC = 'dango_music.mp3';
+  var SRC = 'dango_stream.mp3';
   var audio = null, on = false, timer = null, VOL = 0.85, START_VOL = 0.62, armed = false;
   var blobReady = false, preloading = false;
 
@@ -892,29 +892,6 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
     audio.addEventListener('waiting', function () { if (on) buffering(true); });
     audio.addEventListener('playing', function () { buffering(false); });
     return audio;
-  }
-
-  /* 整包预取 → 切内存播放 */
-  function prefetch() {
-    if (preloading || blobReady) return;
-    preloading = true;
-    fetch(SRC, { cache: 'force-cache' })
-      .then(function (r) { return r.arrayBuffer(); })
-      .then(function (buf) {
-        if (!buf || buf.byteLength < 200000) return;
-        var url = URL.createObjectURL(new Blob([buf], { type: 'audio/mpeg' }));
-        var t = audio.currentTime || 0, wasPlaying = !audio.paused;
-        var once = function () {
-          audio.removeEventListener('loadedmetadata', once);
-          try { audio.currentTime = t; } catch (e) {}
-          if (wasPlaying || on) audio.play().catch(function () {});
-          blobReady = true;
-        };
-        audio.addEventListener('loadedmetadata', once);
-        audio.src = url;
-        audio.load();
-      })
-      .catch(function () { preloading = false; });
   }
 
   function ramp(to, ms, done) {
@@ -936,11 +913,11 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
         btn.setAttribute('aria-pressed', 'true');
         a.volume = START_VOL;                 /* 立刻可闻 */
         ramp(VOL, 1500);
-        toast(); prefetch();
+        toast();
       }).catch(function () { arm(); });
     } else {
       on = true; btn.classList.add('on'); a.volume = START_VOL; ramp(VOL, 1500);
-      toast(); prefetch();
+      toast();
     }
   }
 
