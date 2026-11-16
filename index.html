@@ -969,6 +969,57 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
   };
 })();
 
+/* ---------------- 手机端目录抽屉 ---------------- */
+(function () {
+  'use strict';
+  var btn = document.getElementById('tocbtn');
+  if (!btn) return;
+  var mask = null;
+
+  function build() {
+    var src = document.querySelector('aside');
+    mask = document.createElement('div');
+    mask.className = 'tocmask';
+    var panel = document.createElement('nav');
+    panel.className = 'tocpanel';
+    panel.innerHTML = '<button class="close" aria-label="关闭目录">✕</button>' +
+      '<div class="h">' + (src && src.querySelector('.h') ? src.querySelector('.h').textContent : '目录') + '</div>';
+    if (src) {
+      Array.prototype.forEach.call(src.querySelectorAll('a'), function (a) {
+        var c = document.createElement('a');
+        c.href = a.getAttribute('href');
+        c.textContent = a.textContent;
+        if (a.classList.contains('sub')) c.className = 'sub';
+        c.addEventListener('click', close);
+        panel.appendChild(c);
+      });
+    }
+    mask.appendChild(panel);
+    document.body.appendChild(mask);
+    mask.addEventListener('click', function (e) { if (e.target === mask) close(); });
+    panel.querySelector('.close').addEventListener('click', close);
+  }
+
+  function open() {
+    if (!mask) build();
+    mask.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+  function close() {
+    if (mask) mask.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  btn.setAttribute('aria-expanded', 'false');
+  btn.addEventListener('click', function (e) {
+    e.preventDefault(); e.stopPropagation();
+    (mask && mask.classList.contains('open')) ? close() : open();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+})();
+
 </script>
 </body>
 </html>
