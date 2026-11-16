@@ -197,6 +197,15 @@ aside a{letter-spacing:.02em}
 /* 表格数值列：等宽感 */
 td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
 
+/* 曲目提示 */
+.nowplaying{position:fixed; left:50%; bottom:26px; transform:translate(-50%,14px); z-index:35;
+  background:rgba(255,255,255,.96); border:1px solid var(--line); border-radius:999px;
+  padding:9px 18px; font-size:13px; color:var(--pink-d); box-shadow:var(--shadow);
+  font-family:var(--f-accent); letter-spacing:.06em; opacity:0; pointer-events:none; transition:.45s}
+.nowplaying.show{opacity:1; transform:translate(-50%,0)}
+.nowplaying .wave{font-family:Georgia,serif; font-style:italic}
+@media (max-width:980px){.nowplaying{bottom:74px; font-size:12px; padding:8px 14px}}
+
 </style>
 </head>
 <body>
@@ -838,7 +847,7 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
 
   function ensure() {
     if (audio) return audio;
-    audio = new Audio('dango_96.mp3');
+    audio = new Audio('dango_96.mp3?v=2');
     audio.loop = true;
     audio.preload = 'auto';
     audio.volume = 0;
@@ -867,6 +876,7 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
         on = true; btn.classList.add('on'); btn.classList.remove('wait');
         btn.setAttribute('aria-pressed', 'true');
         ramp(VOL, 3000);            /* 淡入 3 秒 */
+        toast();
       }).catch(function () {        /* 被自动播放策略拦住 → 等第一次交互 */
         arm();
       });
@@ -889,6 +899,20 @@ td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
       document.removeEventListener(ev, kick);
     });
     if (!on) start();
+  }
+
+  function toast() {
+    var el = document.getElementById('nowplaying');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'nowplaying';
+      el.className = 'nowplaying';
+      el.innerHTML = '<span class="wave">♪</span> 正在播放　团子大家族（钢琴版）';
+      document.body.appendChild(el);
+    }
+    el.classList.add('show');
+    clearTimeout(el._t);
+    el._t = setTimeout(function () { el.classList.remove('show'); }, 5000);
   }
 
   function stop() {
