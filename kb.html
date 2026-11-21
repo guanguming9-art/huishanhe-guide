@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>绘山河 · 知识库</title>
+<style>:root{
+  --ink:#2f2430; --ink2:#6a5a64; --ink3:#94838d;
+  --pink:#e59ab0; --pink-d:#c56b86; --pink-l:#fce8ee; --pink-xl:#fff5f8;
+  --gold:#b8954a; --line:#f3dbe3; --card:rgba(255,255,255,.94);
+  --deep:#7c3d52; --shadow:0 12px 34px rgba(197,107,134,.12);
+  --serif-zh:"Songti SC","Noto Serif SC","Source Han Serif SC",serif;
+  --sans-zh:"PingFang SC","Noto Sans SC","Source Han Sans SC",system-ui,-apple-system,sans-serif;
+  --kai-zh:"Kaiti SC","STKaiti","KaiTi",var(--serif-zh);
+  --serif-ja:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;
+  --sans-ja:"Hiragino Sans","Yu Gothic","Noto Sans JP",system-ui,sans-serif;
+  --maru-ja:"Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:80px}
+body{
+  margin:0; color:var(--ink); font-family:var(--sans-zh); line-height:1.9;
+  background:
+    radial-gradient(1100px 520px at 8% -8%, #ffeef4 0%, transparent 62%),
+    radial-gradient(900px 480px at 105% 4%, #fff3f7 0%, transparent 58%),
+    linear-gradient(180deg,#fffbfc 0%,#fff4f8 42%,#fffbfc 100%);
+  -webkit-font-smoothing:antialiased; letter-spacing:.01em;
+}
+/* ---------- 樱花画布：背景层，绝不压字 ---------- */
+#sakura{position:fixed; inset:0; z-index:0; pointer-events:none}
+.wrap{position:relative; z-index:1}
+/* ---------- 顶栏 ---------- */
+.topbar{
+  position:sticky; top:0; z-index:20; backdrop-filter:blur(14px);
+  background:linear-gradient(180deg,rgba(255,250,252,.95),rgba(255,250,252,.78));
+  border-bottom:1px solid var(--line);
+}
+.topbar .inner{max-width:1180px; margin:0 auto; padding:12px 20px; display:flex; gap:16px; align-items:center}
+.brand{display:flex; align-items:center; gap:10px; font-family:var(--serif-zh); font-weight:700; color:var(--deep); letter-spacing:.14em; white-space:nowrap}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--pink-d));box-shadow:0 0 0 4px rgba(229,154,176,.18)}
+.search{position:relative; flex:1; max-width:520px; margin-left:auto}
+.search input{
+  width:100%; padding:10px 40px 10px 16px; border-radius:999px; border:1px solid var(--line);
+  background:#fff; font-family:var(--sans-zh); font-size:15px; color:var(--ink); outline:none;
+  transition:.2s;
+}
+.search input:focus{border-color:var(--pink); box-shadow:0 0 0 4px rgba(229,154,176,.16)}
+.search .kbd{position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:11px; color:var(--ink3); border:1px solid var(--line); border-radius:6px; padding:1px 6px; background:#fffafc}
+.results{
+  position:absolute; top:calc(100% + 8px); left:0; right:0; background:#fff; border:1px solid var(--line);
+  border-radius:16px; box-shadow:0 18px 40px rgba(120,60,80,.18); overflow:hidden; display:none; max-height:60vh; overflow-y:auto;
+}
+.results.on{display:block}
+.results .item{padding:11px 16px; border-bottom:1px solid #fdf0f4; cursor:pointer}
+.results .item:last-child{border-bottom:none}
+.results .item:hover,.results .item.sel{background:var(--pink-xl)}
+.results .item .t{font-size:14px; color:var(--deep); font-weight:600; font-family:var(--serif-zh)}
+.results .item .s{font-size:12.5px; color:var(--ink2); margin-top:2px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.results .empty{padding:16px; color:var(--ink3); font-size:13.5px}
+mark{background:linear-gradient(180deg,transparent 55%,#ffd7e3 55%); color:inherit; padding:0 1px}
+.lang{font-size:12.5px; white-space:nowrap}
+.lang a{color:var(--pink-d); text-decoration:none; border-bottom:1px dotted var(--pink)}
+/* ---------- 布局 ---------- */
+.layout{max-width:1180px; margin:0 auto; padding:0 20px; display:grid; grid-template-columns:236px minmax(0,1fr); gap:36px}
+aside{position:sticky; top:76px; align-self:start; max-height:calc(100vh - 96px); overflow-y:auto; padding:18px 0 40px; font-size:13.5px}
+aside .h{font-family:var(--serif-zh); color:var(--pink-d); letter-spacing:.28em; font-size:11.5px; margin:16px 0 8px}
+aside a{display:block; color:var(--ink2); text-decoration:none; padding:5px 10px; border-radius:8px; border-left:2px solid transparent}
+aside a:hover{background:#fff; color:var(--pink-d); border-left-color:var(--pink)}
+aside a.sub{padding-left:22px; font-size:12.5px; color:var(--ink3)}
+main{padding:34px 0 90px; min-width:0}
+/* ---------- 首屏 ---------- */
+.hero{position:relative; background:var(--card); border:1px solid var(--line); border-radius:26px; padding:44px 40px; box-shadow:var(--shadow); overflow:hidden; display:grid; grid-template-columns:minmax(0,1fr) 258px; gap:26px; align-items:center}
+.hero .seal{display:inline-block; font-size:11px; letter-spacing:.34em; color:var(--pink-d); border:1px solid var(--line); border-radius:999px; padding:5px 14px; background:#fff}
+.hero h1{font-family:var(--serif-zh); font-size:clamp(26px,4.4vw,40px); line-height:1.35; margin:18px 0 10px; color:var(--deep); letter-spacing:.04em}
+.hero p{color:var(--ink2); margin:0; font-size:14.5px}
+.hero .meta{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px}
+.hero .meta span{font-size:12px; color:var(--pink-d); background:var(--pink-xl); border:1px solid var(--line); border-radius:999px; padding:4px 12px}
+.hero .art{position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center}
+.hero .art::before{content:""; position:absolute; inset:-8% -12% -4%; z-index:-1; border-radius:50%;
+  background:radial-gradient(circle at 50% 46%, rgba(255,206,223,.55), rgba(255,240,246,.25) 55%, rgba(255,255,255,0) 72%)}
+.hero .art figcaption{margin-top:8px; font-family:var(--kai-zh); font-size:11.5px; letter-spacing:.18em; color:var(--ink3)}
+.hero .art .dango{position:absolute; right:-14px; bottom:26px; width:64px; height:64px; opacity:.95; animation:float 6s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.hero .art svg{width:100%; height:auto; filter:drop-shadow(0 10px 18px rgba(197,107,134,.18))}
+/* ---------- 章节 ---------- */
+section{margin:26px 0}
+.sec-head{display:flex; align-items:baseline; gap:12px; margin:0 0 4px}
+.sec-head .n{font-family:Georgia,serif; font-size:13px; color:#fff; background:linear-gradient(135deg,var(--pink),var(--pink-d)); width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; flex:none; box-shadow:0 6px 14px rgba(197,107,134,.3)}
+.sec-head h2{font-family:var(--serif-zh); font-size:23px; color:var(--deep); margin:0; letter-spacing:.06em}
+.kicker{color:var(--ink3); font-size:13px; letter-spacing:.1em; margin:0 0 18px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:20px; padding:26px 28px; box-shadow:var(--shadow)}
+h3{font-family:var(--serif-zh); font-size:17px; color:var(--deep); margin:26px 0 8px; letter-spacing:.05em; display:flex; align-items:center; gap:8px}
+h3:first-child{margin-top:0}
+h3::before{content:""; width:6px; height:6px; border-radius:50%; background:var(--pink); box-shadow:0 0 0 4px rgba(229,154,176,.16); flex:none}
+h4{font-family:var(--sans-zh); font-size:15px; color:var(--pink-d); margin:18px 0 6px; font-weight:700; letter-spacing:.03em}
+p{margin:9px 0; font-size:15px}
+ul,ol{padding-left:1.4em; margin:8px 0}
+li{margin:6px 0; font-size:15px}
+strong{color:var(--deep)}
+em{font-family:var(--kai-zh); font-style:normal; color:var(--pink-d); padding:0 2px}
+small{color:var(--ink3)}
+/* ---------- 引用 / 提示 ---------- */
+.poem{font-family:var(--kai-zh); color:var(--pink-d); font-size:17px; text-align:center; letter-spacing:.16em; margin:22px 0; line-height:2}
+.poem::before,.poem::after{content:"—"; color:var(--pink); margin:0 10px; letter-spacing:0}
+.note,.warn,.tip{border-radius:14px; padding:13px 16px 13px 44px; margin:16px 0; position:relative; font-size:14.5px}
+.note{background:#fff8fb; border:1px dashed var(--line); color:#5c4652}
+.warn{background:#fff1f4; border:1px solid #f6c8d5; color:var(--deep)}
+.tip{background:#fdfaf2; border:1px solid #eee2c4; color:#7a6428}
+.note::before,.warn::before,.tip::before{position:absolute; left:15px; top:11px; font-size:15px}
+.note::before{content:"✿"}
+.warn::before{content:"⚠"}
+.tip::before{content:"✎"}
+/* ---------- 表格 ---------- */
+.tablewrap{overflow-x:auto; margin:14px 0; border:1px solid var(--line); border-radius:14px; background:#fff}
+table{border-collapse:collapse; width:100%; font-size:13.8px}
+th,td{padding:9px 13px; text-align:left; border-bottom:1px solid #fceef2; vertical-align:top}
+th{background:linear-gradient(180deg,#fff3f7,#ffe8ef); color:var(--deep); font-weight:700; white-space:nowrap; font-family:var(--serif-zh); letter-spacing:.04em}
+tr:last-child td{border-bottom:none}
+td code, p code, li code{background:#fff2f6; border:1px solid var(--line); border-radius:5px; padding:1px 6px; font-family:"SFMono-Regular",Consolas,monospace; font-size:12.5px; color:#a8486a; white-space:nowrap}
+/* ---------- 卡片组 ---------- */
+.grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; margin:14px 0}
+.mini{background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px}
+.mini b{display:block; font-family:var(--serif-zh); color:var(--pink-d); font-size:13px; letter-spacing:.14em; margin-bottom:4px}
+.mini span{font-size:13.5px; color:var(--ink2)}
+/* ---------- 回到顶部 ---------- */
+.totop{position:fixed; right:18px; bottom:24px; z-index:30; width:44px; height:44px; border-radius:50%; border:1px solid var(--line); background:#fff; color:var(--pink-d); font-size:18px; box-shadow:var(--shadow); cursor:pointer; opacity:0; pointer-events:none; transition:.25s}
+.totop.on{opacity:1; pointer-events:auto}
+/* ---------- 页脚 ---------- */
+footer{max-width:1180px; margin:0 auto; padding:30px 20px 60px; text-align:center; color:var(--ink3); font-size:12.5px; letter-spacing:.08em}
+footer .hr{width:90px; height:1px; background:linear-gradient(90deg,transparent,var(--pink),transparent); margin:0 auto 16px}
+/* ---------- 日语版字形 ---------- */
+body.ja{font-family:var(--sans-ja)}
+body.ja .brand,body.ja h2,body.ja h3,body.ja .min b,body.ja th{font-family:var(--serif-ja)}
+body.ja h4{font-family:var(--maru-ja)}
+body.ja em,body.ja .poem{font-family:var(--maru-ja); letter-spacing:.08em}
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr; gap:0}
+  aside{display:none}
+  .hero{grid-template-columns:1fr; padding:30px 24px}
+  .hero .art{order:-1; max-width:190px; margin:0 auto}
+  .card{padding:22px 18px; border-radius:18px}
+  .search{max-width:none}
+  .brand span.full{display:none}
+}
+
+/* ---------- 音乐开关 ---------- */
+.music{position:fixed; left:18px; bottom:24px; z-index:30; width:46px; height:46px; border-radius:50%;
+  border:1px solid var(--line); background:#fff; color:var(--pink-d); font-size:18px; cursor:pointer;
+  box-shadow:var(--shadow); transition:.25s; display:flex; align-items:center; justify-content:center}
+.music:hover{transform:translateY(-2px)}
+.music.on{background:linear-gradient(135deg,var(--pink),var(--pink-d)); color:#fff; border-color:transparent;
+  animation:breath 3.6s ease-in-out infinite}
+@keyframes breath{0%,100%{box-shadow:0 0 0 0 rgba(229,154,176,.45)}50%{box-shadow:0 0 0 12px rgba(229,154,176,0)}}
+@media (max-width:980px){.music{left:14px; bottom:18px; width:44px; height:44px}}
+
+/* 日语版标题略小，避免折行难看 */
+body.ja .hero h1{font-size:clamp(21px,3.15vw,31px); line-height:1.55; letter-spacing:.02em}
+body.ja .hero p{font-size:14px; line-height:1.95}
+
+/* 插画：白底用 multiply 融入背景 */
+.hero .art img{width:100%; height:auto; display:block; mix-blend-mode:multiply;
+  filter:saturate(1.14) contrast(1.12) brightness(1.02); border-radius:14px}
+
+/* 首屏标题的樱色下划线 */
+.hero h1::after{content:""; display:block; width:74px; height:3px; margin-top:12px; border-radius:3px;
+  background:linear-gradient(90deg,var(--pink),rgba(229,154,176,0))}
+
+/* ================= 字体分层（每种角色不同字族） ================= */
+body{--f-title:var(--serif-zh);--f-body:var(--sans-zh);--f-accent:var(--kai-zh);--f-latin:Georgia,"Times New Roman",serif}
+body.ja{--f-title:var(--serif-ja);--f-body:var(--sans-ja);--f-accent:var(--maru-ja);--f-latin:"Times New Roman",Georgia,serif}
+
+/* 正文：拉丁/数字走 Georgia，汉字走无衬线 */
+body,p,li,td,.hero p,.kicker,.search input,input{font-family:var(--f-latin),var(--f-body)}
+
+/* 标题层：宋体/明朝体，宽字距 */
+.hero h1,.sec-head h2,h3.serif,.results .item .t,.mini b,table th,.hero .seal{
+  font-family:var(--f-title); letter-spacing:.06em}
+.hero h1{letter-spacing:.05em}
+
+/* 小标题：黑体，靠字重区分 */
+h3{font-family:var(--f-latin),var(--f-body); font-weight:800; letter-spacing:.02em}
+
+/* 引文/提示/图注/目录：楷体（日文为丸ゴ） */
+h4,.note,.warn,.tip,.poem,figcaption,aside a,aside .h,.badge,.hero .meta span{
+  font-family:var(--f-accent); letter-spacing:.04em}
+aside a{letter-spacing:.02em}
+
+/* 章节序号、数字、页脚：衬线数字 */
+.sec-head .n,footer,.kbd,.hero .meta span{font-family:Georgia,"Times New Roman",serif}
+.sec-head .n{font-style:italic}
+
+/* 使命 / 触发器 / 案例三章：正文改用宋体，长文阅读更沉 */
+.card.alt p,.card.alt li,.card.alt td{font-family:var(--f-title); line-height:2.05; font-size:14.6px}
+.card.alt h3{font-family:var(--f-latin),var(--f-body)}
+
+/* 表格数值列：等宽感 */
+td code,p code,li code{font-family:"SFMono-Regular",Consolas,monospace}
+
+/* 曲目提示 */
+.nowplaying{position:fixed; left:50%; bottom:26px; transform:translate(-50%,14px); z-index:35;
+  background:rgba(255,255,255,.96); border:1px solid var(--line); border-radius:999px;
+  padding:9px 18px; font-size:13px; color:var(--pink-d); box-shadow:var(--shadow);
+  font-family:var(--f-accent); letter-spacing:.06em; opacity:0; pointer-events:none; transition:.45s}
+.nowplaying.show{opacity:1; transform:translate(-50%,0)}
+.nowplaying .wave{font-family:Georgia,serif; font-style:italic}
+@media (max-width:980px){.nowplaying{bottom:74px; font-size:12px; padding:8px 14px}}
+
+/* 语言切换胶囊 */
+.lang{display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:999px;
+  background:#fff; overflow:hidden; flex:none}
+.lang a{padding:5px 13px; font-size:12px; color:var(--ink2); text-decoration:none; letter-spacing:.06em;
+  border-bottom:none; transition:.2s; white-space:nowrap}
+.lang a.active{background:linear-gradient(135deg,var(--pink),var(--pink-d)); color:#fff}
+.lang a:not(.active):hover{background:var(--pink-xl); color:var(--pink-d)}
+
+/* ---------- 手机端目录抽屉 ---------- */
+.tocbtn{display:none; position:fixed; right:18px; bottom:76px; z-index:31; align-items:center; gap:7px;
+  padding:9px 15px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--pink-d);
+  font-size:13px; font-family:var(--f-accent); letter-spacing:.08em; box-shadow:var(--shadow); cursor:pointer}
+.tocbtn .bars{display:inline-block; width:14px; height:2px; background:currentColor; position:relative}
+.tocbtn .bars::before,.tocbtn .bars::after{content:""; position:absolute; left:0; width:14px; height:2px; background:currentColor}
+.tocbtn .bars::before{top:-5px}.tocbtn .bars::after{top:5px}
+.tocmask{position:fixed; inset:0; z-index:40; background:rgba(72,38,52,.28); backdrop-filter:blur(3px);
+  opacity:0; pointer-events:none; transition:.28s}
+.tocmask.open{opacity:1; pointer-events:auto}
+.tocpanel{position:absolute; left:0; top:0; bottom:0; width:80%; max-width:330px; background:#fff;
+  transform:translateX(-102%); transition:transform .3s cubic-bezier(.4,0,.2,1); overflow-y:auto;
+  padding:26px 8px 40px; box-shadow:8px 0 30px rgba(120,60,80,.18)}
+.tocmask.open .tocpanel{transform:none}
+.tocpanel .h{font-family:var(--f-title); color:var(--pink-d); letter-spacing:.3em; font-size:12px; margin:0 0 14px 18px}
+.tocpanel a{display:block; padding:9px 18px; color:var(--ink2); text-decoration:none; font-size:14.5px;
+  font-family:var(--f-title); border-left:2px solid transparent}
+.tocpanel a.sub{padding-left:34px; font-size:13.5px; color:var(--ink3)}
+.tocpanel a:active,.tocpanel a:hover{background:var(--pink-xl); color:var(--pink-d); border-left-color:var(--pink)}
+.tocpanel .close{position:absolute; right:12px; top:14px; width:32px; height:32px; border-radius:50%;
+  border:1px solid var(--line); background:#fff; color:var(--pink-d); font-size:16px; cursor:pointer}
+@media (max-width:980px){.tocbtn{display:inline-flex}}
+</style></head>
+<body>
+<canvas id="sakura" aria-hidden="true"></canvas>
+<div class="topbar"><div class="inner">
+  <div class="brand"><span class="dot"></span><span class="full">绘山河 · 知识库</span></div>
+  <div class="search"><input id="q" type="search" placeholder="搜索：循环 / 可见条件 / 六兄弟 …" autocomplete="off"><span class="kbd">/</span><div class="results" id="res"></div></div>
+  <div class="lang"><a href="index.html">讲义</a><a href="ja.html">日本語</a></div>
+</div></div>
+<div class="wrap"><div class="layout">
+<aside><div class="h">资料</div><a href="#k0">六讲定稿</a><a href="#k1">国家使命</a><a href="#k2">触发器</a><a href="#k3">填写表示例</a></aside>
+<main>
+<div class="hero"><div>
+<span class="seal">无 悔 华 夏 · 绘 山 河</span>
+<h1>知识库</h1>
+<p>四份原始资料的完整备份：六讲讲义、国家使命字段、触发器字段、实操填写表。</p>
+</div></div>
+<section id="k0"><div class="sec-head"><span class="n">01</span><h2>六讲定稿</h2></div><p class="kicker">完整讲义</p><div class="card"><h2>绘山河创意工坊 · 六讲教程（定稿存档）</h2>
+<div class="tip">来源：游戏内《国家使命》《触发器》百科全量备份（用户提供）+ B 站 itsafool 三支视频 + 编辑实机。 用途：本工作区的知识底座；每次改剧本、写配置都以本文件为准。</div>
+<hr>
+<h3>第 1 讲 · 是什么 · 谁能写 · 全流程</h3>
+<h4>定义</h4>
+<p>绘山河是《无悔华夏》内置的自创剧本工坊：用官方剧本当底模，重画疆域、重配势力、重写剧情，发布给别人玩。</p>
+<h4>两种身份</h4>
+<ul><li><strong>游玩者</strong>：通关任一主时代剧本。</li><li><strong>绘师</strong>：通关四个主时代剧本且全部一星以上 + 同意《创作者协议》。战役、传记暂不作底图。</li></ul>
+<h4>绘师等级</h4>
+<p>经验按他人游玩的<strong>平均胜率与时长</strong>结算，<strong>胜率过高或过低都不给经验</strong>。等级解锁发布数量与草稿位。</p>
+<h4>五步流程</h4>
+<p>选底图 → 地图编辑 → 国家编辑 → 城市编辑 → 剧情编辑；底部另有<strong>国家使命</strong>、<strong>触发器</strong>。</p>
+<h4>三层结构</h4>
+<div class="tablewrap"><table>
+<tr><th>层</th><th>内容</th><th>决定</th></tr>
+<tr><td>数据层</td><td>地图 + 国家 + 城市</td><td>开局长什么样</td></tr>
+<tr><td>叙事层</td><td>剧情</td><td>玩家看到什么</td></tr>
+<tr><td>逻辑层</td><td>国家使命 + 触发器</td><td>世界怎么运转</td></tr>
+</table></div>
+<h4>顺序铁律</h4>
+<p><strong>先定结局 → 倒推使命链 → 补触发器 → 写剧情 → 压数值</strong>。反做必返工。</p>
+<hr>
+<h3>第 2 讲 · ① 选底图 ② 地图编辑</h3>
+<h4>选底图</h4>
+<p>底图只给地图骨架，<strong>不锁年代</strong>。例：做「五国伐齐」可借汉末三国大地图。绘本标签不绑底图时代。</p>
+<h4>地图编辑</h4>
+<div class="tablewrap"><table>
+<tr><th>子页</th><th>内容</th></tr>
+<tr><td>剧本详情</td><td>名称、年份、<strong>可玩势力</strong>（多选）、BGM</td></tr>
+<tr><td>介绍界面</td><td>进入时的介绍语</td></tr>
+<tr><td>封面与简介</td><td>素材库背景 + 人物素材拼封面</td></tr>
+<tr><td>绘本标签</td><td>架空、小型地图等，决定曝光</td></tr>
+</table></div>
+<p><strong>坑</strong>：可玩势力必须在这一页勾，编辑过的国家≠可玩国家。</p>
+<hr>
+<h3>第 3 讲 · ③ 国家编辑 ④ 城市编辑</h3>
+<h4>国家编辑</h4>
+<ol><li><strong>覆盖国家设置</strong>：整套国家数据（数值/特有兵种/美术）覆盖进来，跨时代混搭的正规途径。<strong>坑：跨时代特殊资源不带过来，须手动重配。</strong></li><li><strong>初始编辑国家 / 选择其他国家</strong>：划版图、增删国家。</li><li><strong>国君信息</strong>：头像、旗帜、名字、国号、性格。</li><li><strong>国家数值</strong>：初始军规、战斗力、钱粮、特资、首都、势力颜色。</li><li><strong>战场</strong>：初始兵种、特色子弟兵、特色国家卡牌。</li><li><strong>势力介绍</strong>：常规介绍 + <strong>灭国专属描述（单独一栏，最易漏）</strong>。</li><li><strong>势力标签</strong>：纯展示，无数值影响。</li></ol>
+<h4>城市编辑</h4>
+<ol><li><strong>城市等级 + 所属国家</strong>：逐城改归属＝重画国界。</li><li><strong>治所 / 要地互转</strong>：改战略价值。</li><li><strong>隐藏城市</strong>：小地图高密度剧本的关键。</li><li><strong>城市资源</strong>：军心、民心、腐化、人口、兵力、产出、城防。</li></ol>
+<ul><li>拖时间：边城城防满 + 人口低</li><li>内政压力：腹地腐化高</li><li>逼外交：敌首都塞满兵</li></ul>
+<p><strong>与触发器联动的两条硬限制</strong>：</p>
+<ul><li><code>检测城市参数在某范围内</code> 只对<strong>治所</strong>生效，不含要地</li><li><code>判断国家城市等级之和</code> 排除<strong>隐藏城与要地</strong></li></ul>
+<hr>
+<h3>第 4 讲 · ⑤ 剧情编辑 ⑥ 国家使命</h3>
+<h4>剧情编辑</h4>
+<ul><li><strong>文本库</strong>：通用文本复用，避免手打重复</li><li><strong>撰写新情节</strong>：局内对话，逐幕配<strong>头像 + 台词</strong></li><li><strong>关键节点</strong>：每势力 <strong>开场 / 胜利 / 失败</strong></li><li><strong>详细剧情</strong>：三种触发——消灭某国 / 占领特定城池 / 随时间推移</li></ul>
+<p><strong>铁律</strong>：剧情页挂不住复杂条件，判断交给使命或触发器。</p>
+<h4>国家使命（四段）</h4>
+<ol><li><strong>基础设定</strong>：绑定国家、参数、特性</li><li><strong>可见条件</strong>：满足后才出现在任务列表</li><li><strong>完成条件</strong>：玩家目标</li><li><strong>达成效果</strong>：奖励与特殊效果</li></ol>
+<h4>字段清单</h4>
+<div class="tablewrap"><table>
+<tr><th>字段</th><th>规则</th></tr>
+<tr><td>使命标题</td><td><strong>≤7 字</strong></td></tr>
+<tr><td>编辑器序号</td><td>仅编辑器内排序</td></tr>
+<tr><td>排序</td><td>游戏内顺序，<strong>从小到大</strong></td></tr>
+<tr><td>可见国家</td><td>多选；条件中“挂载国家”<strong>按国家分别计算</strong></td></tr>
+<tr><td>使命类型</td><td>普通（不出结局）/ 终局（出结局）</td></tr>
+<tr><td>可重复完成</td><td>条件须含<strong>计数条件</strong>（如计时器），完成后<strong>清零重计</strong></td></tr>
+<tr><td>不可见隐藏</td><td>开启后条件不满足会<strong>再藏回去</strong></td></tr>
+<tr><td>奖励说明</td><td><strong>≤20 字</strong></td></tr>
+<tr><td>奖励项目</td><td><strong>≤6 字</strong> + 图标</td></tr>
+<tr><td>是否显示效果</td><td><strong>默认不勾</strong></td></tr>
+</table></div>
+<h4>达成效果参数池</h4>
+<ul><li><strong>国家属性</strong>：战斗力、军团规模、威望、科技值、用间等级、全国军队、文化值、修行/乐感等级、朴素信仰、各级兵种等级、全国人口、野兽等级</li><li><strong>城市属性</strong>：民心、军心、腐败、城市耐久、城市人口、城市用间防御</li><li><strong>资源</strong>：士子、铁、歌板、马匹、丝绸、城市兵甲、良驹、商队、玄机、词源、酒、香料、熏衣…</li><li><strong>特殊取值</strong>：治所数量、盟国藩属国数、最高城市等级、损失兵甲、名臣姓名字数、女性名臣数、好感&gt;90 国家数、武将数、人口倍数（100 万/500 万）、存活/已灭亡国家数、治所地块数和、累计战斗次数、主时代通关数、5 级及以上城市数、完成的时代政策数</li></ul>
+<div class="tip"><strong>关键联动</strong>：触发器 <code>检测国家参数在某范围内</code> 的参数 = 这张表。</div>
+<hr>
+<h3>第 5 讲 · ⑦ 触发器</h3>
+<h4>三个模块</h4>
+<p>基础设定 / 达成条件（<strong>只能一个</strong>）/ 达成效果</p>
+<h4>基础设定五字段</h4>
+<p>挂载对象（国家/全局）、初始启用、循环触发、效果目标、编辑器序号</p>
+<h4>四条规则</h4>
+<ol><li><strong>挂载国家多选 = 多份独立副本</strong>；挂载国灭亡则该副本失效</li><li><strong>挂载全局 = 不随灭国消失</strong>，但条件与效果都须指定具体国家/城市，<strong>效果目标只能一个</strong></li><li><strong>初始启用不勾</strong> → 必须被效果<code>添加并开启</code>；被效果添加的<strong>一定初始关闭</strong></li><li><strong>循环三前提</strong>：条件含不取反的计数条件；达成后计数重计；新添加/曾关闭的<strong>初始非循环</strong>，需<code>设为循环</code></li></ol>
+<h4>条件库 21 条</h4>
+<p><strong>逻辑组件（3）</strong></p>
+<div class="tablewrap"><table>
+<tr><th>条件</th><th>说明</th></tr>
+<tr><td>判断满足条件数（多条件复合）</td><td>≥N 条满足；N=1 为“或”，N=全部为“与”</td></tr>
+<tr><td>判断不满足条件数（多条件复合）</td><td>≥N 条不满足</td></tr>
+<tr><td>返回与否</td><td>恒假；取反后恒真</td></tr>
+</table></div>
+<p><strong>基础（6）</strong>：检测目标国家存活 / 拥有指定的所有城市 / 检查目标国家是否为玩家 / <strong>计时器</strong>（计数判断）/ 检测目标国家是否在列表中 / 玩家是否曾携带武器战斗</p>
+<p><strong>属性状态（6）</strong>：<strong>检测国家参数在某范围内</strong>（特性主来源）/ 已完成国家使命 / 检测目标城市是否在列表中 / <strong>检测城市参数在某范围内</strong>（仅治所）/ 检测两国好感度 / 判断国家城市等级之和范围（排除隐藏与要地）</p>
+<p><strong>属性计数（6）</strong>：<strong>累计计算触发次数</strong>（持久、可循环）/ <strong>触发时机匹配</strong>（瞬时、不保存、不可循环）/ 累计计算获取的特殊资源数 / 累计进攻大捷次数（限制战损｜限制打出卡牌｜限制时间）</p>
+<h4>三个机关</h4>
+<ol><li><strong>与/或/非</strong>：N=1 或、N=全 与；<code>返回与否</code>+取反 = 恒真（站位置）；单独<code>返回与否</code> = 恒假（废掉触发器）</li><li><strong>边沿 vs 电平</strong>：<code>触发时机匹配</code> 只那一瞬；<code>累计计算触发次数</code> 达成后一直真。选错会导致“事后补条件也发奖励”</li><li><strong>六兄弟</strong>：添加、开启、关闭、移除、设为循环、取消循环。<strong>不能自调用</strong>（只响一次），循环靠 1↔2 互相拉起；频率过高会被<strong>静默掐断</strong></li></ol>
+<h4>三个坑</h4>
+<ul><li>多国挂载 + 全局效果 = <strong>×N</strong></li><li><strong>特资是唯一自由寄存器</strong>（读：检测国家参数→资源；写：效果→资源；数：累计计算获取的特殊资源数），易被其他系统污染</li><li>循环被掐 / 挂载国被灭 → <strong>静默停摆</strong></li></ul>
+<hr>
+<h3>第 6 讲 · 配合 · 实操 · 检查单</h3>
+<h4>分工</h4>
+<p>使命给选择权（主线/分支/结局）；触发器暗中改世界（特性/难度/隐藏机制）；剧情只演。 <strong>触发器不做结局</strong>；条件不稀有就别用触发器插剧情。</p>
+<h4>四种范式</h4>
+<ol><li><strong>事件链</strong>：B 的可见条件写“已完成使命 A”</li><li><strong>IF/ELSE</strong>：成对触发器同时拉起，效果里<strong>移除对方</strong>（互斥锁）</li><li><strong>状态机</strong>：六兄弟开关，每次拉起配 <code>开启</code> + <code>设为循环</code></li><li><strong>伪随机</strong>：计时器给特资加值 → 两个触发器互相调用做取模 → 读特资分派分支；加强：改步长、加长周期计数器（1s+4/5s+1/7s+2，周期 5 分 15 秒）、扩值域或加第二种特资</li></ol>
+<h4>实操：雪夜入蔡州</h4>
+<p><strong>T1 困兽</strong>：挂载 国家·淮西｜初始启用 ☑｜循环 ☑｜效果目标 挂载国家 条件 <code>判断满足条件数</code> 3：① <code>计时器</code> 10 ② <code>检测国家参数</code> 治所数量 0–2 ③ <code>检测城市参数</code> 蔡州·民心 0–39 效果 <code>国家战斗力</code> +X（军团规模单位是人）</p>
+<p><strong>T2 破城</strong>：挂载 全局｜初始启用 ☑｜循环 ☐｜效果目标 玩家国家 条件 <code>判断满足条件数</code> 2：① <code>触发时机匹配</code> 进攻战斗胜利 ② <code>检测目标城市是否在列表中</code> 蔡州 效果 <code>触发剧情</code> + <code>添加触发器</code>/<code>开启触发器</code> T3</p>
+<p><strong>T3</strong>：初始启用 ☐；条件 <code>返回与否</code>+取反（恒真）；效果 <code>关闭触发器</code> T2 → <code>添加并开启</code> T4、T5 <strong>T4</strong>：①淮西存活 ②治所 0–2；效果 <code>移除</code> T5、拉起 T6 <strong>T5</strong>：恒真；效果 <code>移除</code> T4、拉起 T7</p>
+<h4>检查单</h4>
+<ol><li>循环条件里有不取反的计数条件吗</li><li>多国 × 全局效果 = ×N，是对的吗</li><li>一次性用边沿、长期用累计，对吗</li><li>城市条件只看治所、等级和排除隐藏与要地，对得上吗</li><li>新拉起的触发器补了 <code>开启</code> 与 <code>设为循环</code> 吗</li><li>字数：7 / 20 / 6</li><li>该外显的效果勾了吗</li></ol>
+<h4>延伸</h4>
+<ul><li>B 站 itsafool（UID 309336532）：国家使命与触发器设计 / 井字棋 / 伪随机</li><li>游戏内「绘师百科」与「进行完整引导」</li></ul>
+<hr>
+<h3>待验证清单</h3>
+<ol><li><code>触发时机匹配</code> 的「触发时机」下拉完整条目（视频里只见到「执行一次募兵」这类句式，未展开）</li><li>指令类效果（触发剧情 / 获得城池 / 结盟 / 结局 / 六兄弟）在效果树中的分类位置</li><li>触发器数量上限、循环最短间隔</li><li>「可重复完成」界面是开关还是可填次数（攻略与百科说法不一，以百科为准）</li></ol></div></section><section id="k1"><div class="sec-head"><span class="n">02</span><h2>国家使命</h2></div><p class="kicker">字段全解</p><div class="card"><h2>无悔华夏 · 绘山河 · 国家使命（用户整理稿）</h2>
+<div class="tip">来源：用户本人整理，2026-11-16 提供。未经我改写，仅做排版。</div>
+<h3>一、国家使命综述</h3>
+<h4>（一）简述</h4>
+<ol><li>国家使命是玩家操作剧本可见的“任务系统”。</li><li>分为普通使命和终局。</li><li>对应官方剧本中推动流程的“国家使命”任务栏，创作者可自行设计。</li><li>一条完整的国家使命通常由四部分构成：基础设定、可见条件、完成条件、达成效果。</li></ol>
+<h4>（二）四部分</h4>
+<ol><li><strong>基础设定</strong>：设立绑定国家、基础参数和特性。</li><li><strong>可见条件</strong>：满足后该使命可见；决定何时/因何事出现在玩家任务列表。</li><li><strong>完成条件</strong>：满足后该使命可被完成；即玩家要达成的目标。</li><li><strong>达成效果</strong>：完成使命后获得的效果。</li></ol>
+<h4>（三）预览与绑定国家</h4>
+<ol><li>编辑完成后可在编辑界面预览国家使命界面。</li><li>绑定国家不同，每个国家可用的使命也不同。</li></ol>
+<h3>二、模块解说</h3>
+<h4>（一）使命名称</h4>
+<ul><li>使命标题：可编辑，<strong>7 个字以内</strong>。</li></ul>
+<h4>（二）编辑器序号</h4>
+<ul><li>用于确定使命在编辑器内的序号；<strong>不影响游戏内排序</strong>，仅供编辑器内便利使用。</li></ul>
+<h4>（三）排序</h4>
+<ul><li>决定<strong>游戏内</strong>国家使命排序优先级，<strong>从小到大</strong>排。</li></ul>
+<h4>（四）可见国家</h4>
+<ul><li>决定该使命能被哪些国家使用，可选多个。</li><li>注意：在条件中选择挂载国家对象时，<strong>记录的是挂载的每个国家本身，分开计算条件</strong>。</li></ul>
+<h4>（五）使命类型</h4>
+<ul><li><strong>普通使命</strong>：不触发结局，用于事件或某种战役等。</li><li><strong>终局使命</strong>：触发结局，用于特定数值（如民心低于 10 触发叛乱失败终局）或统一结局等。</li></ul>
+<h4>（六）可重复完成</h4>
+<ul><li>表明该使命能否被重复完成。</li><li><strong>条件中必须存在计数类型条件（如【计时器】），否则可能被无限完成。</strong></li><li>达成完成条件并完成后，<strong>计数类型条件会清零并重新计数</strong>。</li></ul>
+<h4>（七）不可见隐藏</h4>
+<ul><li>不满足可见条件隐藏：决定使命是否可被<strong>二次隐藏</strong>。</li><li>开启后：可见条件不满足时，使命会重新隐藏。</li><li>示例：可见条件设为【秦】国家存在，则秦灭亡时该任务变为不可用状态。</li></ul>
+<h4>（八）奖励说明</h4>
+<ul><li>与奖励项目一起绑定达成效果，是完成使命后的奖励描述。</li><li><strong>至多 20 个字</strong>，建议一句话说清。</li></ul>
+<h4>（九）奖励项目</h4>
+<ul><li>奖励说明与奖励项目绑定达成效果。</li><li>奖励描述绑定一个图标，并用<strong>至多 6 个字</strong>简要说明效果。</li></ul>
+<h4>（十）奖励效果（达成效果/完成效果）</h4>
+<div class="tip">注：触发条件里「属性状态 → 检测国家参数在某范围内」的参数，同样选择这里的这些效果项。</div>
+<p><strong>1. 国家属性</strong> 国家战斗力、军团规模、威望、科技值、用间等级、全国军队、文化值、修行等级、乐感等级、朴素信仰、骑兵等级、枪兵等级、步兵等级、弓兵等级、车兵/重骑等级、全国人口、野兽等级。</p>
+<p><strong>2. 城市属性</strong> 民心、军心、腐败、城市耐久、城市人口、城市用间防御。</p>
+<p><strong>3. 资源</strong> 士子、铁、歌板、马匹、丝绸、城市兵甲、良驹、商队、玄机、词源、酒、香料、熏衣等。</p>
+<p><strong>4. 特殊条件（不常见，一般不考虑）</strong></p>
+<ul><li>A. 取当前国家治所数量</li><li>B. 取玩家盟国藩属国数量</li><li>C. 最高城市等级</li><li>D. 本局损失的兵甲计数</li><li>E. 名臣姓名字数</li><li>F. 女性名臣数量</li><li>G. 好感度超 90 国家数</li><li>H. 取武将数量</li><li>I. 人口倍数（100 万为一单位 / 500 万为一单位）</li><li>J. 存活国家数量</li><li>K. 取已灭亡国家数量</li><li>L. 取我国治所地块数量之和</li><li>M. 玩家累计战斗次数</li><li>N. 主时代通关数</li><li>O. 拥有 5 级及以上城市数量</li><li>P. 取完成的时代政策数量</li></ul>
+<h4>（十一）是否显示效果</h4>
+<ul><li>每个效果可以单独决定是否外显。</li><li>过于复杂或难以表述的效果可以不对外显示。</li><li><strong>默认不勾选</strong>。</li></ul>
+<h3>三、我的备注（待核对）</h3>
+<ol><li>攻略类文章说「可重复完成」是填“次数”；本稿是<strong>开关 + 必须含计数条件 + 完成后清零</strong>。以本稿为准，待客户端确认。</li><li>本稿“达成效果”只列了数值/取值类；但视频里出现「触发剧情」「获得城池」「结盟」「结局」等特殊效果，需补一份特殊效果清单。</li><li>可见条件与完成条件是否共用同一套条件库（四类：逻辑组件/基础/属性状态/属性计数），待确认。</li></ol></div></section><section id="k2"><div class="sec-head"><span class="n">03</span><h2>触发器</h2></div><p class="kicker">字段全解 · 21 条条件</p><div class="card"><h2>无悔华夏 · 绘山河 · 触发器（用户整理稿）</h2>
+<div class="tip">来源：用户本人整理，2026-11-16 提供。未经我改写，仅做排版。日期：2026-11-05。</div>
+<h3>一、触发器综述</h3>
+<p>触发器没有任何在游戏中可查看的界面，用于设计“满足条件就会发生”的剧本事件或场景事件。许多国家特性就是通过触发器实现的。</p>
+<h3>二、三个模块</h3>
+<ol><li><strong>基础设定</strong>：设计触发器绑定的国家，或设为全局触发器，确定效果目标。</li><li><strong>达成条件（触发条件）</strong>：激活触发器的条件；<strong>计数条件在触发器开启后开始计数</strong>。</li><li><strong>达成效果（完成效果）</strong>：完成触发后，为效果目标添加的效果。</li></ol>
+<h4>1. 挂载对象</h4>
+<ul><li>挂载对象为【国家】时，取条件中挂载国家，可以方便地获取数据。</li><li>若选择多个国家，则每个国家挂载的触发器都是<strong>单独的副本</strong>。若挂载国家灭亡，则对应的这个副本的触发器就不会生效了，不影响其他国家。</li><li>挂载对象为【全局】时，不会以任何国家为挂载目标。条件和效果都需要<strong>指定具体的某个城市或国家</strong>。</li></ul>
+<h4>2. 初始启用</h4>
+<ul><li>决定触发器在游戏开始时是否启用。</li><li><strong>后续用效果添加的触发器，一定初始处于关闭状态</strong>，要用效果指令开启。</li></ul>
+<h4>3. 循环触发</h4>
+<ul><li>决定触发器完成后是否会循环开启。</li><li><strong>条件中必须存在不取反的计数类型的条件，否则可能被无限触发。</strong></li><li>达成触发条件后，<strong>计数类型的条件会重新计数</strong>。</li><li><strong>后续用效果添加的触发器、以及曾被关闭的触发器，初始处于非循环状态</strong>，需要用效果指令开启循环。</li></ul>
+<h4>4. 效果目标</h4>
+<ul><li>决定触发器完成后为谁赋予效果。</li><li>挂载对象是国家时，可选择给挂载国家；全局触发器必须指定一个目标。</li></ul>
+<h4>5. 编辑器序号</h4>
+<ul><li>决定编辑器内排序；触发器无游戏内界面，该参数仅在编辑器内有效。</li></ul>
+<h3>三、达成条件（四类）</h3>
+<h4>（一）逻辑组件</h4>
+<ol><li><strong>判断满足条件数（多条件复合）</strong>：判断子条件组中是否<strong>至少有指定数量</strong>的条件已满足。</li></ol>
+<ul><li>判断对象：子条件组；参数：最少满足数量（正整数且不超过子条件数）；类型：复合判断。</li></ul>
+<ol><li><strong>判断不满足条件数（多条件复合）</strong>：判断子条件组中是否至少有指定数量的条件<strong>尚未满足</strong>。</li></ol>
+<ul><li>参数：最少不满足数量；类型：复合判断。</li></ul>
+<ol><li><strong>返回与否</strong>：固定判断为不通过；<strong>配置取反后可作为固定通过条件</strong>。</li></ol>
+<ul><li>判断对象：无；参数：无；类型：状态判断。</li></ul>
+<h4>（二）基础</h4>
+<ol><li><strong>检测目标国家存活</strong>：存活则通过。对象：国家；参数：无；状态判断。</li><li><strong>拥有指定的所有城市</strong>：直辖拥有全部指定城市时通过。对象：国家；参数：多选城市；状态判断。</li><li><strong>检查目标国家是否为玩家</strong>：是当前玩家国家则通过。对象：国家；参数：无；状态判断。</li><li><strong>计时器</strong>：随条件启用（使命开局启用／触发器开启时启用），经过一定时间后通过。参数：正整数（秒）；<strong>计数判断</strong>。</li><li><strong>检测目标国家是否在列表中</strong>：属于指定多国之一则通过。对象：国家；参数：多选国家；状态判断。</li><li><strong>玩家是否曾携带武器战斗</strong>：存在对应战斗记录则通过。对象：玩家；参数：无；状态判断。</li></ol>
+<h4>（三）属性状态（国家特性来源）</h4>
+<ol><li><strong>检测国家参数在某范围内</strong>（大多数国家特性的来源）：判断指定效果值是否处于配置区间，达到最小值且不超过最大值时通过。对象：国家；参数：<strong>效果类型（同下方“达成效果”参数池）</strong>、最小值、最大值（闭区间）；状态判断。</li><li><strong>已完成国家使命</strong>：指定使命完成时通过。对象：国家；参数：选择国家使命；状态判断。</li><li><strong>检测目标城市是否在列表中</strong>（原稿写作“检测目标国家是否在列表中”，疑笔误）：判断城市是否属于指定城市列表。对象：城市；参数：多选城市；状态判断。</li><li><strong>检测城市参数在某范围内</strong>：判断目标城市指定效果值是否在区间内。对象：<strong>治所（非要地）</strong>；参数：效果类型、最小值、最大值（闭区间）；状态判断。</li><li><strong>检测两国好感度</strong>：判断对指定国家好感度是否在区间内。对象：国家；参数：另一国家 ID、最小值、最大值；状态判断。</li><li><strong>判断国家城市等级之和范围</strong>：判断全部<strong>非隐藏、非要地</strong>城市的等级总和是否在区间内。对象：国家；参数：最小/最大总等级（闭区间）；状态判断。</li></ol>
+<h4>（四）属性计数</h4>
+<ol><li><strong>累计计算触发次数</strong>：从启用时累计指定触发类型发生次数，达配置次数后通过。对象：触发来源国家；参数：触发次数（正整数）；计数判断。</li><li><strong>触发时机匹配</strong>（疑为“触发时机匹配”）：判断当前事件触发时机是否与配置的触发类型一致，<strong>一致的瞬间通过（状态不保存，通常用于触发器）</strong>。对象：国家；参数：触发项目；触发时机判断。</li><li><strong>累计计算获取的特殊资源数</strong>：从启用时累计获得指定特殊资源，达配置值后通过。对象：国家；参数：特殊资源、获得数量；计数判断。</li><li><strong>累计进攻大捷次数（限制战损）</strong>：累计非自动战斗中的攻城大捷；进攻方战损比例不高于上限时计数一次。参数：战损比例上限、完成次数。</li><li><strong>累计进攻大捷次数（限制打出卡牌）</strong>：玩家用卡数量不超过上限时计数一次。参数：用卡数量上限、完成次数。</li><li><strong>累计进攻大捷次数（限制时间）</strong>：战胜且不超过配置时间计数一次。参数：战斗耗时上限（秒）、完成次数。</li></ol>
+<h3>四、达成效果参数</h3>
+<div class="tip">注：触发条件里「检测国家参数在某范围内」的参数，同样选这里的效果。</div>
+<p><strong>国家属性</strong>：国家战斗力、军团规模、威望、科技值、用间等级、全国军队、文化值、修行等级、乐感等级、朴素信仰、骑兵等级、枪兵等级、步兵等级、弓兵等级、车兵/重骑等级、全国人口、野兽等级。</p>
+<p><strong>城市属性</strong>：民心、军心、腐败、城市耐久、城市人口、城市用间防御。</p>
+<p><strong>资源</strong>：士子、铁、歌板、马匹、丝绸、城市兵甲、良驹、商队、玄机、词源、酒、香料、熏衣等。</p>
+<p><strong>特殊条件</strong>：取当前国家治所数量、取玩家盟国藩属国数量、最高城市等级、本局损失的兵甲计数、名臣姓名字数、女性名臣数量、好感度超 90 国家数、取武将数量、人口倍数（100 万/500 万单位）、存活国家数量、取已灭亡国家数量、取我国治所地块数量之和、玩家累计战斗次数、主时代通关数、拥有 5 级及以上城市数量、取完成的时代政策数量。</p>
+<h3>五、我的备注（待核对）</h3>
+<ol><li>「触发时机匹配」疑为「触发时机匹配」笔误；“参数：触发项目”的<strong>完整枚举清单</strong>仍缺。</li><li>属性状态第 3 条判断对象写“城市”，名称写“检测目标<strong>国家</strong>是否在列表中”，疑笔误。</li><li>达成效果里只列了数值/取值类；“触发剧情／获得城池／结盟／结局／触发器六兄弟（添加/开启/关闭/移除/设为循环/取消循环）”这些<strong>指令类效果</strong>的归类与确切名字待补。</li><li>触发器数量上限、循环最短间隔未知。</li></ol></div></section><section id="k3"><div class="sec-head"><span class="n">04</span><h2>填写表示例</h2></div><p class="kicker">雪夜入蔡州</p><div class="card"><h2>触发器填写表 · 示例「雪夜入蔡州」</h2>
+<div class="tip">依据：用户提供的《国家使命》《触发器》百科全量备份 + 编辑器界面。 状态标记：<code>[已确认]</code> = 百科或界面里明确写了；<code>[待确认]</code> = 需要点开下拉核对。 条件库四类：逻辑组件 / 基础 / 属性状态 / 属性计数（界面右上还有“收藏夹”）。</div>
+<h3>0. 设计目标</h3>
+<p>玩家扮演唐军，围攻蔡州；若淮西已残（治所少、民心低）则淮西获得“困兽”战力加成；玩家在<strong>某一次进攻战斗胜利</strong>后触发「雪夜入蔡州」剧情，剧情后开启 AI 反击决策链。</p>
+<h3>T1 困兽（常驻特性）</h3>
+<div class="tablewrap"><table>
+<tr><th>字段</th><th>填写</th></tr>
+<tr><td>挂载对象</td><td>国家 → 淮西</td></tr>
+<tr><td>初始启用</td><td>☑</td></tr>
+<tr><td>循环触发</td><td>☑</td></tr>
+<tr><td>效果目标</td><td>挂载国家（淮西）</td></tr>
+</table></div>
+<p><strong>达成条件</strong>：逻辑组件 →「判断满足条件数」，参数 = <strong>3</strong>，子条件：</p>
+<ol><li>基础 →「计时器」，参数 = <strong>10</strong>（秒）<code>[已确认]</code> —— 这条提供“不取反的计数条件”，是循环的合法前提</li><li>属性状态 →「检测国家参数在某范围内」：效果类型 = <strong>取当前国家治所数量</strong>，最小值 0，最大值 2 <code>[已确认]</code></li><li>属性状态 →「检测城市参数在某范围内」：城市 = 蔡州（治所），效果类型 = <strong>民心</strong>，0–39 <code>[待确认：民心属城市属性，用“检测国家参数”能否直接判全国口径]</code></li></ol>
+<p><strong>达成效果</strong>：国家属性 →「国家战斗力」+X <code>[注意]</code> 若改用「军团规模」，单位是<strong>人</strong>：2 万标准军 ×12% = 2400 人 <code>[已确认]</code></p>
+<h3>T2 破城（一次性边沿事件）</h3>
+<div class="tablewrap"><table>
+<tr><th>字段</th><th>填写</th></tr>
+<tr><td>挂载对象</td><td>全局</td></tr>
+<tr><td>初始启用</td><td>☑</td></tr>
+<tr><td>循环触发</td><td>☐（边沿条件不能循环）</td></tr>
+<tr><td>效果目标</td><td>玩家国家</td></tr>
+</table></div>
+<p><strong>达成条件</strong>：逻辑组件 →「判断满足条件数」，参数 = <strong>2</strong></p>
+<ol><li>属性计数 →「触发时机匹配」：参数 = 触发项目 → <strong>“进攻战斗胜利”类</strong>（下拉条目 <code>[待确认]</code>）</li><li>属性状态 →「检测目标城市是否在列表中」：蔡州</li></ol>
+<p><strong>达成效果</strong>：<code>触发剧情</code>「雪夜入蔡州」+ <code>添加触发器</code> T3 + <code>开启触发器</code> T3 <code>[待确认：指令类效果的分类位置]</code></p>
+<h3>T3 剧情后置（被拉起）</h3>
+<ul><li>初始启用：☐（不勾；被效果添加的触发器一定初始关闭）<code>[已确认]</code></li><li>达成条件：「返回与否」+ 取反 = 恒真 <code>[已确认]</code>，让它一被开启就执行</li><li>达成效果：<code>关闭触发器</code> T2（防二次触发）→ <code>添加并开启</code> T4、T5</li></ul>
+<h3>T4 / T5 IF-ELSE 分支</h3>
+<div class="tablewrap"><table>
+<tr><th>触发器</th><th>达成条件</th><th>达成效果</th></tr>
+<tr><td>T4（能反击）</td><td>判断满足条件数 = 2：①淮西治所存活 ②治所数量 0–2</td><td><code>移除触发器</code> T5；<code>添加并开启</code> T6；如需循环加<code>设为循环</code> T6</td></tr>
+<tr><td>T5（不能反击）</td><td>「返回与否」+ 取反（恒真）</td><td><code>移除触发器</code> T4；<code>添加并开启</code> T7</td></tr>
+</table></div>
+<p><code>[注意]</code> 新添加的触发器默认<strong>关闭且非循环</strong>；要循环必须再发一条<code>设为循环</code>。</p>
+<h3>检查单（每次出表过一遍）</h3>
+<ol><li><strong>循环合法性</strong>：勾了循环的条件里，必须有不取反的计数条件（计时器/累计次数/特资数）。<code>[已确认]</code></li><li><strong>多国 ×N</strong>：挂载范围选多个国家 = 每个国家一份副本；效果是全局范围时，实际效果 = 副本数 × 单份值。<code>[已确认]</code></li><li><strong>边沿 vs 电平</strong>：<code>触发时机匹配</code> 状态不保存，只在一瞬间为真，不能循环；要“之后一直算数”用<code>累计计算触发次数</code>。<code>[已确认]</code></li><li><strong>城市条件只看治所</strong>：<code>检测城市参数</code> 判断对象是治所（非要地）；<code>判断国家城市等级之和</code> 排除隐藏城与要地。<code>[已确认]</code></li><li><strong>资源是唯一自由寄存器</strong>：读=<code>检测国家参数在某范围内→资源</code>，写=<code>达成效果→资源</code>，数=<code>累计计算获取的特殊资源数</code>。做计数器/伪随机都靠它。<code>[已确认]</code></li><li><strong>自调用只响一次</strong>：触发器不能靠自己循环，要用 1↔2 互相拉起；频率过高会被系统掐断。<code>[视频实证]</code></li></ol>
+<h3>界面小技巧</h3>
+<ul><li>条件选择框右上角有<strong>收藏夹</strong>：把<code>计时器</code>、<code>检测国家参数在某范围内</code>、<code>判断满足条件数</code>收进去，建本时省一大截时间。<code>[界面确认]</code></li></ul></div></section>
+</main></div></div>
+<footer><div class="hr"></div>绘山河 · 知识库 ｜ 2026.11</footer>
+<button class="music" id="music" aria-label="背景音乐">♪</button>
+<button class="tocbtn" id="tocbtn" aria-label="打开目录"><span class="bars"></span>目录</button>
+<script>
+(function(){var cv=document.getElementById('sakura');if(!cv)return;var c=cv.getContext('2d'),W,H,ps=[],d=Math.min(devicePixelRatio||1,2);
+function rs(){W=cv.width=innerWidth*d;H=cv.height=innerHeight*d;cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';}
+function mk(){return{x:Math.random()*W,y:Math.random()*H-H,r:(5+Math.random()*7)*d,vy:(.25+Math.random()*.55)*d,vx:(-.25+Math.random()*.5)*d,a:Math.random()*6.28,va:-.006+Math.random()*.012,o:.16+Math.random()*.22};}
+function ini(){ps=[];for(var i=0;i<26;i++){var p=mk();p.y=Math.random()*H;ps.push(p);}}
+function draw(p){c.save();c.translate(p.x,p.y);c.rotate(p.a);c.globalAlpha=p.o;var g=c.createLinearGradient(-p.r,-p.r,p.r,p.r);g.addColorStop(0,'#ffe3ec');g.addColorStop(1,'#f2a7bf');c.fillStyle=g;c.beginPath();c.moveTo(0,-p.r);c.bezierCurveTo(p.r*.9,-p.r*.7,p.r*.8,p.r*.6,0,p.r);c.bezierCurveTo(-p.r*.8,p.r*.6,-p.r*.9,-p.r*.7,0,-p.r);c.fill();c.restore();}
+var t=0;function loop(){t+=.006;c.clearRect(0,0,W,H);for(var i=0;i<ps.length;i++){var p=ps[i];p.x+=p.vx+Math.sin(t+i)*.35*d;p.y+=p.vy;p.a+=p.va;if(p.y>H+40||p.x<-60||p.x>W+60){ps[i]=mk();ps[i].y=-30;}draw(p);}requestAnimationFrame(loop);}
+rs();ini();loop();addEventListener('resize',function(){rs();ini();});})();
+</script>
+</body></html>
